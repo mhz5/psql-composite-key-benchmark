@@ -60,7 +60,7 @@ jobs:
           );
 
           CREATE INDEX idx_schema2_shard ON schema2(shard_id);
-SQL
+          SQL
 
           echo "Populating tables..."
           for i in {1..1000}; do
