@@ -2,8 +2,7 @@ name: Postgres Schema Benchmark
 
 on:
   push:
-    paths:
-      - .github/workflows/postgres-schema-benchmark.yml
+    branches: main
 
 jobs:
   benchmark:
