@@ -1,0 +1,80 @@
+name: Postgres Schema Benchmark
+
+on:
+  push:
+    paths:
+      - .github/workflows/postgres-schema-benchmark.yml
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Wait for PostgreSQL
+        run: |
+          until pg_isready -h localhost -p 5432; do sleep 1; done
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Run performance test
+        run: |
+          PSQL="psql -h localhost -U test -d testdb -w"
+          export PGPASSWORD=test
+
+          echo "Creating schemas..."
+          $PSQL <<SQL
+          DROP TABLE IF EXISTS schema1;
+          DROP TABLE IF EXISTS schema2;
+
+          CREATE TABLE schema1 (
+            topic_id TEXT,
+            shard_id INT,
+            message_id INT,
+            content TEXT,
+            PRIMARY KEY (topic_id, shard_id, message_id)
+          );
+
+          CREATE TABLE schema2 (
+            topic_id TEXT,
+            message_id INT,
+            shard_id INT,
+            content TEXT,
+            PRIMARY KEY (topic_id, message_id)
+          );
+
+          CREATE INDEX idx_schema2_shard ON schema2(shard_id);
+SQL
+
+          echo "Populating tables..."
+          for i in {1..1000}; do
+            for j in {1..10}; do
+              for k in {1..100}; do
+                echo "INSERT INTO schema1 VALUES ('t$i', $j, $k, 'hello');"
+                echo "INSERT INTO schema2 VALUES ('t$i', $k, $j, 'hello');"
+              done
+            done
+          done | $PSQL > /dev/null
+
+          echo "Benchmarking shard_id filter on schema1 (composite PK)..."
+          time $PSQL -c "SELECT COUNT(*) FROM schema1 WHERE shard_id = 5;"
+
+          echo "Benchmarking shard_id filter on schema2 (index on shard)..."
+          time $PSQL -c "SELECT COUNT(*) FROM schema2 WHERE shard_id = 5;"
