@@ -63,15 +63,35 @@ jobs:
           SQL
 
           echo "Populating tables..."
-          for topic in {1..3}; do
-            # Generate 100 unique random message_ids from 1 to 10000 for each topic
-            message_ids=$(shuf -i 1-100000 -n 100)
+          # Common configuration
+          NUM_TOPICS=3
+          NUM_SHARDS=10
+          NUM_MESSAGES=100
+          MSG_ID_RANGE=100000
+
+          echo "Inserting into schema1 (composite PK)..."
+          start_time=$(date +%s)
+          for topic in $(seq 1 $NUM_TOPICS); do
+            message_ids=$(shuf -i 1-$MSG_ID_RANGE -n $NUM_MESSAGES)
             for k in $message_ids; do
-              shard_id=$((RANDOM % 10 + 1))
+              shard_id=$((RANDOM % NUM_SHARDS + 1))
               echo "INSERT INTO schema1 VALUES ('t$topic', $shard_id, $k, 'hello');"
+            done
+          done | $PSQL > /dev/null
+          end_time=$(date +%s)
+          echo "Schema1 insert time: $((end_time - start_time)) seconds"
+
+          echo "Inserting into schema2 (separate index)..."
+          start_time=$(date +%s)
+          for topic in $(seq 1 $NUM_TOPICS); do
+            message_ids=$(shuf -i 1-$MSG_ID_RANGE -n $NUM_MESSAGES)
+            for k in $message_ids; do
+              shard_id=$((RANDOM % NUM_SHARDS + 1))
               echo "INSERT INTO schema2 VALUES ('t$topic', $k, $shard_id, 'hello');"
             done
           done | $PSQL > /dev/null
+          end_time=$(date +%s)
+          echo "Schema2 insert time: $((end_time - start_time)) seconds"
 
           echo "Benchmarking shard_id filter on schema1 (composite PK)..."
           time $PSQL -c "SELECT COUNT(*) FROM schema1 WHERE shard_id = 5;"
