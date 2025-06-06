@@ -132,3 +132,20 @@ jobs:
           
           echo "Schema2 index size:"
           $PSQL -c "SELECT pg_size_pretty(pg_indexes_size('schema2')) AS schema2_index_size;"
+
+          LOOKUP_PAIR=$( $PSQL -t -A -c "SELECT topic_id, message_id FROM schema2 LIMIT 1;" )
+          LOOKUP_TOPIC_ID=$(echo $LOOKUP_PAIR | cut -d'|' -f1)
+          LOOKUP_MESSAGE_ID=$(echo $LOOKUP_PAIR | cut -d'|' -f2)
+          
+          echo "Benchmarking lookup by (topic_id, message_id) on schema1..."
+          start=$(date +%s%3N)
+          $PSQL -c "SELECT * FROM schema1 WHERE topic_id = '$LOOKUP_TOPIC_ID' AND message_id = $LOOKUP_MESSAGE_ID;" > /dev/null
+          end=$(date +%s%3N)
+          echo "schema1 topic_id + message_id lookup time: $((end - start)) ms"
+          
+          echo "Benchmarking lookup by (topic_id, message_id) on schema2..."
+          start=$(date +%s%3N)
+          $PSQL -c "SELECT * FROM schema2 WHERE topic_id = '$LOOKUP_TOPIC_ID' AND message_id = $LOOKUP_MESSAGE_ID;" > /dev/null
+          end=$(date +%s%3N)
+          echo "schema2 topic_id + message_id lookup time: $((end - start)) ms"
+
