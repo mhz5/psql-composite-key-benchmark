@@ -64,10 +64,10 @@ jobs:
 
           echo "Populating tables..."
           # Common configuration
-          NUM_TOPICS=100
+          NUM_TOPICS=300
           NUM_SHARDS=98
-          NUM_MESSAGES=100
-          MSG_ID_RANGE=1000000
+          NUM_MESSAGES=1000
+          MSG_ID_RANGE=10000000
           
           declare -a tuples=()
           
