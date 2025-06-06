@@ -64,8 +64,8 @@ jobs:
 
           echo "Populating tables..."
           # Common configuration
-          NUM_TOPICS=300
-          NUM_SHARDS=10
+          NUM_TOPICS=100
+          NUM_SHARDS=100
           NUM_MESSAGES=100
           MSG_ID_RANGE=100000
           
@@ -106,6 +106,8 @@ jobs:
           echo "Benchmarking shard_id filter on schema1 (composite PK)..."
           start=$(date +%s%3N)
           $PSQL -c "SELECT COUNT(*) FROM schema1 WHERE shard_id = 5;" > /dev/null
+          $PSQL -c "SELECT COUNT(*) FROM schema1 WHERE shard_id = 55;" > /dev/null
+          $PSQL -c "SELECT COUNT(*) FROM schema1 WHERE shard_id = 99;" > /dev/null
           end=$(date +%s%3N)
           echo -e "\033[0;32mschema1 shard_id filter time: $((end - start)) ms\033[0m"
           
@@ -118,6 +120,8 @@ jobs:
           echo "Benchmarking shard_id filter on schema2 (with index)..."
           start=$(date +%s%3N)
           $PSQL -c "SELECT COUNT(*) FROM schema2 WHERE shard_id = 5;" > /dev/null
+          $PSQL -c "SELECT COUNT(*) FROM schema2 WHERE shard_id = 55;" > /dev/null
+          $PSQL -c "SELECT COUNT(*) FROM schema2 WHERE shard_id = 99;" > /dev/null
           end=$(date +%s%3N)
           echo -e "\033[0;32mschema2 shard_id filter time: $((end - start)) ms\033[0m"
           
