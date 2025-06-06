@@ -91,7 +91,7 @@ jobs:
           done | $PSQL > /dev/null
           end_time=$(date +%s%3N)
           
-          echo -e "\033[0;32mSchema1 insert time: $((end_time - start_time)) milliseconds\033[0m"
+          echo -e "\033[0;32mSchema1 (topic:shard:msg composite key) insert time: $((end_time - start_time)) milliseconds\033[0m"
 
           echo "Inserting into schema2 (separate index)..."
           start_time=$(date +%s%3N)
@@ -101,7 +101,7 @@ jobs:
             echo "INSERT INTO schema2 VALUES ('$topic_id', $message_id, $shard_id, 'hello');"
           done | $PSQL > /dev/null
           end_time=$(date +%s%3N)
-          echo -e "\033[0;32mSchema2 insert time: $((end_time - start_time)) milliseconds\033[0m"
+          echo -e "\033[0;32mSchema2 (topic:msg composite key, separate shard index) insert time: $((end_time - start_time)) milliseconds\033[0m"
 
           echo "Benchmarking shard_id filter on schema1 (composite PK)..."
           start=$(date +%s%3N)
@@ -128,10 +128,10 @@ jobs:
           echo -e "\033[0;32mschema2 full table scan time: $((end - start)) ms\033[0m"
           
           echo "=== Index Storage Size ==="
-          echo -e "\033[0;32mSchema1 index size:\033[0m"
+          echo -e "\033[0;32mSchema1 (topic:shard:msg composite key) index size:"
           $PSQL -c "SELECT pg_size_pretty(pg_indexes_size('schema1')) AS schema1_index_size;"
           
-          echo -e "\033[0;32mSchema2 index size:\033[0m"
+          echo -e "\033[0;32mSchema2 (topic:msg composite key, separate shard index) index size:\033[0m"
           $PSQL -c "SELECT pg_size_pretty(pg_indexes_size('schema2')) AS schema2_index_size;"
 
           # Extract the first tuple from the precomputed list
