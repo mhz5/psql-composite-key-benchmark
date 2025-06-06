@@ -65,9 +65,9 @@ jobs:
           echo "Populating tables..."
           # Common configuration
           NUM_TOPICS=100
-          NUM_SHARDS=100
+          NUM_SHARDS=98
           NUM_MESSAGES=100
-          MSG_ID_RANGE=100000
+          MSG_ID_RANGE=1000000
           
           declare -a tuples=()
           
@@ -105,9 +105,9 @@ jobs:
 
           echo "Benchmarking shard_id filter on schema1 (composite PK)..."
           start=$(date +%s%3N)
-          $PSQL -c "SELECT COUNT(*) FROM schema1 WHERE shard_id = 5;" > /dev/null
-          $PSQL -c "SELECT COUNT(*) FROM schema1 WHERE shard_id = 55;" > /dev/null
-          $PSQL -c "SELECT COUNT(*) FROM schema1 WHERE shard_id = 99;" > /dev/null
+          for shard_id in $(seq 1 $NUM_SHARDS); do
+            $PSQL -c "SELECT COUNT(*) FROM schema1 WHERE shard_id = $shard_id;" > /dev/null
+          done
           end=$(date +%s%3N)
           echo -e "\033[0;32mschema1 shard_id filter time: $((end - start)) ms\033[0m"
           
@@ -119,9 +119,9 @@ jobs:
           
           echo "Benchmarking shard_id filter on schema2 (with index)..."
           start=$(date +%s%3N)
-          $PSQL -c "SELECT COUNT(*) FROM schema2 WHERE shard_id = 5;" > /dev/null
-          $PSQL -c "SELECT COUNT(*) FROM schema2 WHERE shard_id = 55;" > /dev/null
-          $PSQL -c "SELECT COUNT(*) FROM schema2 WHERE shard_id = 99;" > /dev/null
+          for shard_id in $(seq 1 $NUM_SHARDS); do
+            $PSQL -c "SELECT COUNT(*) FROM schema2 WHERE shard_id = $shard_id;" > /dev/null
+          done
           end=$(date +%s%3N)
           echo -e "\033[0;32mschema2 shard_id filter time: $((end - start)) ms\033[0m"
           
@@ -155,3 +155,21 @@ jobs:
           end=$(date +%s%3N)
           echo -e "\033[0;32mschema2 topic_id + message_id lookup time: $((end - start)) ms\033[0m"
 
+          echo -e "Benchmarking 100 lookups by (topic_id, message_id)..."
+          # First 100 lookups for schema1
+          start=$(date +%s%3N)
+          for tuple in "${tuples[@]:0:100}"; do
+            IFS=',' read topic_id shard_id message_id <<< "$tuple"
+            $PSQL -c "SELECT * FROM schema1 WHERE topic_id = '$topic_id' AND message_id = $message_id;" > /dev/null
+          done
+          end=$(date +%s%3N)
+          echo -e "\033[0;32mSchema1 topic_id + message_id lookup time: $((end - start)) ms\033[0m"
+
+          # First 100 lookups for schema2
+          start=$(date +%s%3N)
+          for tuple in "${tuples[@]:0:100}"; do
+            IFS=',' read topic_id shard_id message_id <<< "$tuple"
+            $PSQL -c "SELECT * FROM schema2 WHERE topic_id = '$topic_id' AND message_id = $message_id;" > /dev/null
+          done
+          end=$(date +%s%3N)
+          echo -e "\033[0;32mSchema2 topic_id + message_id lookup time: $((end - start)) ms\033[0m"
