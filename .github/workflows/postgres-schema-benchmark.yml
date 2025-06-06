@@ -62,6 +62,26 @@ jobs:
           CREATE INDEX idx_schema2_shard ON schema2(shard_id);
           SQL
           
+          echo "Populating tables..."
+          # Common configuration
+          NUM_TOPICS=300
+          NUM_SHARDS=98
+          NUM_MESSAGES=1000
+          MSG_ID_RANGE=10000000
+          
+          declare -a tuples=()
+          
+          echo "Generating all (topic_id, shard_id, message_id) tuples..."
+          for topic in $(seq 1 $NUM_TOPICS); do
+            topic_id="t$topic"
+            message_ids=$(shuf -i 1-$MSG_ID_RANGE -n $NUM_MESSAGES)
+            for message_id in $message_ids; do
+              shard_id=$((RANDOM % NUM_SHARDS + 1))
+              tuples+=("$topic_id,$shard_id,$message_id")
+            done
+          done
+          echo "Generated ${#tuples[@]} tuples."
+
           # Benchmarking functions
           benchmark_insert() {
             local schema=$1
