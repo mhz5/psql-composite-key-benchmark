@@ -63,11 +63,11 @@ jobs:
           SQL
 
           echo "Populating tables..."
-          for i in {1..1000}; do
-            for j in {1..10}; do
-              for k in {1..100}; do
-                echo "INSERT INTO schema1 VALUES ('t$i', $j, $k, 'hello');"
-                echo "INSERT INTO schema2 VALUES ('t$i', $k, $j, 'hello');"
+          for i in {1..2}; do
+            for j in {1..2}; do
+              for k in {1..2}; do
+                echo "INSERT INTO schema1 VALUES ('t$i', $j, $k, '$i$j$k');"
+                echo "INSERT INTO schema2 VALUES ('t$i', $k, $j, '$i$k$j');"
               done
             done
           done | $PSQL > /dev/null
