@@ -90,7 +90,8 @@ jobs:
             echo "INSERT INTO schema1 VALUES ('$topic_id', $shard_id, $message_id, 'hello');"
           done | $PSQL > /dev/null
           end_time=$(date +%s%3N)
-          echo "Schema1 insert time: $((end_time - start_time)) milliseconds"
+          
+          echo -e "\033[0;32mSchema1 insert time: $((end_time - start_time)) milliseconds\033[0m"
 
           echo "Inserting into schema2 (separate index)..."
           start_time=$(date +%s%3N)
@@ -100,37 +101,37 @@ jobs:
             echo "INSERT INTO schema2 VALUES ('$topic_id', $message_id, $shard_id, 'hello');"
           done | $PSQL > /dev/null
           end_time=$(date +%s%3N)
-          echo "Schema2 insert time: $((end_time - start_time)) milliseconds"
+          echo -e "\033[0;32mSchema2 insert time: $((end_time - start_time)) milliseconds\033[0m"
 
           echo "Benchmarking shard_id filter on schema1 (composite PK)..."
           start=$(date +%s%3N)
           $PSQL -c "SELECT COUNT(*) FROM schema1 WHERE shard_id = 5;" > /dev/null
           end=$(date +%s%3N)
-          echo "schema1 shard_id filter time: $((end - start)) ms"
+          echo -e "\033[0;32mschema1 shard_id filter time: $((end - start)) ms\033[0m"
           
           echo "Benchmarking full table scan on schema1..."
           start=$(date +%s%3N)
           $PSQL -c "SELECT COUNT(*) FROM schema1;" > /dev/null
           end=$(date +%s%3N)
-          echo "schema1 full table scan time: $((end - start)) ms"
+          echo -e "\033[0;32mschema1 full table scan time: $((end - start)) ms\033[0m"
           
           echo "Benchmarking shard_id filter on schema2 (with index)..."
           start=$(date +%s%3N)
           $PSQL -c "SELECT COUNT(*) FROM schema2 WHERE shard_id = 5;" > /dev/null
           end=$(date +%s%3N)
-          echo "schema2 shard_id filter time: $((end - start)) ms"
+          echo -e "\033[0;32mschema2 shard_id filter time: $((end - start)) ms\033[0m"
           
           echo "Benchmarking full table scan on schema2..."
           start=$(date +%s%3N)
           $PSQL -c "SELECT COUNT(*) FROM schema2;" > /dev/null
           end=$(date +%s%3N)
-          echo "schema2 full table scan time: $((end - start)) ms"
+          echo -e "\033[0;32mschema2 full table scan time: $((end - start)) ms\033[0m"
           
           echo "=== Index Storage Size ==="
-          echo "Schema1 index size:"
+          echo -e "\033[0;32mSchema1 index size:\033[0m"
           $PSQL -c "SELECT pg_size_pretty(pg_indexes_size('schema1')) AS schema1_index_size;"
           
-          echo "Schema2 index size:"
+          echo -e "\033[0;32mSchema2 index size:\033[0m"
           $PSQL -c "SELECT pg_size_pretty(pg_indexes_size('schema2')) AS schema2_index_size;"
 
           # Extract the first tuple from the precomputed list
@@ -142,11 +143,11 @@ jobs:
           start=$(date +%s%3N)
           $PSQL -c "SELECT * FROM schema1 WHERE topic_id = '$LOOKUP_TOPIC_ID' AND message_id = $LOOKUP_MESSAGE_ID;" > /dev/null
           end=$(date +%s%3N)
-          echo "schema1 topic_id + message_id lookup time: $((end - start)) ms"
+          echo -e "\033[0;32mschema1 topic_id + message_id lookup time: $((end - start)) ms\033[0m"
           
           echo "Benchmarking lookup by (topic_id, message_id) on schema2..."
           start=$(date +%s%3N)
           $PSQL -c "SELECT * FROM schema2 WHERE topic_id = '$LOOKUP_TOPIC_ID' AND message_id = $LOOKUP_MESSAGE_ID;" > /dev/null
           end=$(date +%s%3N)
-          echo "schema2 topic_id + message_id lookup time: $((end - start)) ms"
+          echo -e "\033[0;32mschema2 topic_id + message_id lookup time: $((end - start)) ms\033[0m"
 
