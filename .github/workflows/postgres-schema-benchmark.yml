@@ -83,24 +83,24 @@ jobs:
           echo "Generated ${#tuples[@]} tuples."
           
           echo "Inserting into schema1 (composite PK)..."
-          start_time=$(date +%s)
+          start_time=$(date +%s%3N)
           echo "Inserting into schema1..."
           for tuple in "${tuples[@]}"; do
             IFS=',' read topic_id shard_id message_id <<< "$tuple"
             echo "INSERT INTO schema1 VALUES ('$topic_id', $shard_id, $message_id, 'hello');"
           done | $PSQL > /dev/null
-          end_time=$(date +%s)
-          echo "Schema1 insert time: $((end_time - start_time)) seconds"
+          end_time=$(date +%s%3N)
+          echo "Schema1 insert time: $((end_time - start_time)) milliseconds"
 
           echo "Inserting into schema2 (separate index)..."
-          start_time=$(date +%s)
+          start_time=$(date +%s%3N)
           echo "Inserting into schema2..."
           for tuple in "${tuples[@]}"; do
             IFS=',' read topic_id shard_id message_id <<< "$tuple"
             echo "INSERT INTO schema2 VALUES ('$topic_id', $message_id, $shard_id, 'hello');"
           done | $PSQL > /dev/null
-          end_time=$(date +%s)
-          echo "Schema2 insert time: $((end_time - start_time)) seconds"
+          end_time=$(date +%s%3N)
+          echo "Schema2 insert time: $((end_time - start_time)) milliseconds"
 
           echo "Benchmarking shard_id filter on schema1 (composite PK)..."
           time $PSQL -c "SELECT COUNT(*) FROM schema1 WHERE shard_id = 5;"
