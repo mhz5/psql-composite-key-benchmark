@@ -66,7 +66,7 @@ jobs:
           # Common configuration
           NUM_TOPICS=300
           NUM_SHARDS=98
-          NUM_MESSAGES=1000
+          NUM_MESSAGES=500
           MSG_ID_RANGE=10000000
           
           declare -a tuples=()
