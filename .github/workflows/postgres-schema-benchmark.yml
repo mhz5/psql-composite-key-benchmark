@@ -64,7 +64,7 @@ jobs:
 
           echo "Populating tables..."
           # Common configuration
-          NUM_TOPICS=3
+          NUM_TOPICS=100
           NUM_SHARDS=10
           NUM_MESSAGES=100
           MSG_ID_RANGE=100000
