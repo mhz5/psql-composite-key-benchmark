@@ -64,7 +64,7 @@ jobs:
 
           echo "Populating tables..."
           # Common configuration
-          NUM_TOPICS=3
+          NUM_TOPICS=300
           NUM_SHARDS=10
           NUM_MESSAGES=100
           MSG_ID_RANGE=100000
@@ -72,7 +72,6 @@ jobs:
           declare -a tuples=()
           
           echo "Generating all (topic_id, shard_id, message_id) tuples..."
-          
           for topic in $(seq 1 $NUM_TOPICS); do
             topic_id="t$topic"
             message_ids=$(shuf -i 1-$MSG_ID_RANGE -n $NUM_MESSAGES)
@@ -81,8 +80,8 @@ jobs:
               tuples+=("$topic_id,$shard_id,$message_id")
             done
           done
-          
           echo "Generated ${#tuples[@]} tuples."
+          
           echo "Inserting into schema1 (composite PK)..."
           start_time=$(date +%s)
           echo "Inserting into schema1..."
@@ -95,12 +94,10 @@ jobs:
 
           echo "Inserting into schema2 (separate index)..."
           start_time=$(date +%s)
-          for topic in $(seq 1 $NUM_TOPICS); do
-            message_ids=$(shuf -i 1-$MSG_ID_RANGE -n $NUM_MESSAGES)
-            for k in $message_ids; do
-              shard_id=$((RANDOM % NUM_SHARDS + 1))
-              echo "INSERT INTO schema2 VALUES ('t$topic', $k, $shard_id, 'hello');"
-            done
+          echo "Inserting into schema2..."
+          for tuple in "${tuples[@]}"; do
+            IFS=',' read topic_id shard_id message_id <<< "$tuple"
+            echo "INSERT INTO schema2 VALUES ('$topic_id', $message_id, $shard_id, 'hello');"
           done | $PSQL > /dev/null
           end_time=$(date +%s)
           echo "Schema2 insert time: $((end_time - start_time)) seconds"
